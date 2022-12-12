@@ -1,0 +1,88 @@
+*{
+    margin: 0;
+    padding: 0px;
+    box-sizing: border-box;
+}
+body{
+    background-image: url(fondo.jpg);
+    background-size: 100vw 100vh;
+    background-attachment: fixed;
+    
+}
+.formulario{
+    width: 400px;
+    background: rgb(8, 35, 94);
+    padding: 30px;
+    margin: auto;
+    margin-top: 80px;
+    color: white;
+    border-radius: 05px;
+    font-family: cursive;
+    box-shadow: 7px 13px 37px #000;
+
+}
+.formulario h4{
+    font-size: 20px;
+    text-align: center;
+    font-family:Arial, Helvetica, sans-serif ;
+    margin-bottom: 10px;
+}
+.formulario a{
+text-decoration: none;
+color:white;
+}
+.formulario p{
+    margin-top: 20px;
+    text-align:center ;
+    font-size: 20px;
+}
+.formulario a:hover{
+    color:rgb(146, 144, 144);
+    text-decoration: underline;
+}
+.registro{
+    width: 100%;
+    padding: 9px;
+    margin-bottom: 18px;
+    border-radius: 5px;
+    border: 1px solid rgb(139, 20, 20);
+    background-color: rgba(15, 15, 68, 0.514);
+    color:white;
+    font-size: 15px;
+}
+.termino{
+    margin-top: 15px;
+    display: flex;
+    margin-bottom: 15px;
+    
+}
+.termino label{
+    font-size: 20px;
+    margin: 0px;
+}
+
+#chet{
+    margin-right: 10px;
+    width: 15px;
+}
+
+#chet:checked~ label{
+color: rgb(146, 144, 144);
+}
+#botom {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    color: white;
+    background-color:rgb(139, 20, 20);
+    font-size: 16px;
+}
+#botom:active{
+    background-color: rgba(165, 26, 26, 0.658);
+    color: rgb(75, 5, 5);
+}
+#botom:hover {
+    cursor: pointer;
+}
+
