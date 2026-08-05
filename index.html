@@ -300,11 +300,19 @@
     background:transparent;color:var(--slate-400);border:none;padding:8px;font-size:12.5px;
     cursor:pointer;font-family:'Inter',sans-serif;text-align:center;
   }
+
+  .save-indicator{
+    position:fixed;bottom:20px;right:20px;font-size:12px;color:var(--green);
+    font-family:'IBM Plex Mono',monospace;opacity:0;transition:opacity 0.3s;
+    z-index:500;
+  }
+  .save-indicator.show{opacity:1;}
 </style>
 </head>
 <body>
 <div class="top-band"></div>
 <div id="toast-wrap"></div>
+<div class="save-indicator" id="save-indicator">✓ Guardado</div>
 
 <!-- COMPLETION MODAL -->
 <div class="modal-overlay" id="modal-overlay">
@@ -403,6 +411,7 @@
   let currentArea = "";
   let editingId = null;
   let completingId = null;
+  let saveTimeout = null;
 
   const $ = (id) => document.getElementById(id);
 
@@ -438,23 +447,51 @@
     return (parts[0][0]+parts[1][0]).toUpperCase();
   }
 
-  // ---------- STORAGE ----------
-  async function loadTasks(){
+  // ---------- STORAGE (usando localStorage) ----------
+  function loadTasks(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, true);
-      tasks = res && res.value ? JSON.parse(res.value) : [];
-    }catch(e){ tasks = []; }
+      const data = localStorage.getItem(STORAGE_KEY);
+      tasks = data ? JSON.parse(data) : [];
+    }catch(e){ 
+      console.error('Error al cargar pendientes:', e);
+      tasks = []; 
+    }
     try{
-      const res2 = await window.storage.get(NOTIF_KEY, true);
-      notified = res2 && res2.value ? JSON.parse(res2.value) : {};
-    }catch(e){ notified = {}; }
+      const data = localStorage.getItem(NOTIF_KEY);
+      notified = data ? JSON.parse(data) : {};
+    }catch(e){ 
+      console.error('Error al cargar notificaciones:', e);
+      notified = {}; 
+    }
   }
-  async function saveTasks(){
-    try{ await window.storage.set(STORAGE_KEY, JSON.stringify(tasks), true); }
-    catch(e){ toast('Error de guardado','No se pudo guardar en el almacenamiento.'); }
+
+  function showSaveIndicator(){
+    const ind = $('save-indicator');
+    ind.classList.add('show');
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(()=>{
+      ind.classList.remove('show');
+    }, 2000);
   }
-  async function saveNotified(){
-    try{ await window.storage.set(NOTIF_KEY, JSON.stringify(notified), true); }catch(e){}
+
+  function saveTasks(){
+    try{ 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+      showSaveIndicator();
+      console.log('Pendientes guardados:', tasks.length);
+    }
+    catch(e){ 
+      toast('Error de guardado','No se pudo guardar en el almacenamiento local.');
+      console.error('Error al guardar:', e);
+    }
+  }
+
+  function saveNotified(){
+    try{ 
+      localStorage.setItem(NOTIF_KEY, JSON.stringify(notified));
+    }catch(e){
+      console.error('Error al guardar notificaciones:', e);
+    }
   }
 
   function tickClock(){
@@ -496,7 +533,7 @@
     setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 5000);
   }
 
-  async function setupNotifications(){
+  function setupNotifications(){
     const statusEl = $('notif-status');
     if(!('Notification' in window)){
       statusEl.textContent = 'Este navegador no admite notificaciones del sistema. Los avisos se mostrarán aquí en pantalla mientras la agenda esté abierta.';
@@ -544,7 +581,7 @@
   }
 
   // ---------- CRUD ----------
-  async function registrar(){
+  function registrar(){
     const fecha = $('f-fecha').value;
     const area = $('f-area').value.trim();
     const responsable = $('f-resp').value.trim();
@@ -558,7 +595,7 @@
       estado: 'pendiente', solucion: '', aplazamientos: [], createdAt: Date.now()
     });
     $('f-fecha').value=''; $('f-area').value=''; $('f-resp').value=''; $('f-texto').value='';
-    await saveTasks();
+    saveTasks();
     refreshFilterOptions();
     render();
     toast('Pendiente registrado', texto);
@@ -572,7 +609,7 @@
   }
   function cerrarModal(){ completingId = null; $('modal-overlay').classList.remove('open'); }
 
-  async function confirmarCompletar(conSolucion){
+  function confirmarCompletar(conSolucion){
     if(!completingId) return;
     const t = tasks.find(x=>x.id===completingId);
     if(!t){ cerrarModal(); return; }
@@ -580,27 +617,27 @@
     t.completedAt = Date.now();
     t.solucion = conSolucion ? $('modal-solucion').value.trim() : '';
     cerrarModal();
-    await saveTasks();
+    saveTasks();
     render();
     toast('Pendiente realizado', t.texto);
   }
 
-  async function reabrir(id){
+  function reabrir(id){
     const t = tasks.find(x=>x.id===id);
     if(!t) return;
     t.estado = 'pendiente'; delete t.completedAt;
-    await saveTasks();
+    saveTasks();
     render();
   }
 
-  async function eliminar(id){
+  function eliminar(id){
     tasks = tasks.filter(x=>x.id!==id);
-    await saveTasks();
+    saveTasks();
     refreshFilterOptions();
     render();
   }
 
-  async function guardarAplazamiento(id){
+  function guardarAplazamiento(id){
     const t = tasks.find(x=>x.id===id);
     if(!t) return;
     const nuevaFecha = $('edit-fecha-'+id).value;
@@ -616,7 +653,7 @@
     }
     t.fecha = nuevaFecha; t.texto = nuevoTexto; t.area = nuevaArea; t.responsable = nuevoResp;
     editingId = null;
-    await saveTasks();
+    saveTasks();
     refreshFilterOptions();
     render();
     toast('Pendiente reprogramado', `Nueva fecha: ${nuevaFecha}`);
@@ -778,14 +815,14 @@
   $('modal-cancelar').onclick = cerrarModal;
   $('modal-overlay').addEventListener('click', (e)=>{ if(e.target.id==='modal-overlay') cerrarModal(); });
 
-  async function init(){
+  function init(){
     renderAreaChips();
     tickClock();
     setInterval(tickClock, 30000);
-    await loadTasks();
+    loadTasks();
     refreshFilterOptions();
     render();
-    await setupNotifications();
+    setupNotifications();
     checkDueNotifications();
     setInterval(checkDueNotifications, 60000);
   }
