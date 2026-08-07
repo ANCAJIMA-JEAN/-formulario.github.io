@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Pendientes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --bg-band:#eef1fa;
+    --card:#ffffff;
+    --ink:#1b2033;
+    --ink-soft:#4a5169;
+    --slate-400:#7a8399;
+    --slate-500:#9aa3b5;
+    --border:#e5e8f1;
+    --border-strong:#d7dcea;
+
+    --indigo:#4f46e5;
+    --indigo-soft:#eef0fd;
+    --indigo-ink:#3730a3;
+
+    --teal:#0d9488;
+    --teal-soft:#e3f6f3;
+
+    --green:#15883f;
+    --green-soft:#e7f7ec;
+
+    --amber:#c2760a;
+    --amber-soft:#fdf1de;
+
+    --red:#d1372f;
+    --red-soft:#fdeae8;
+
+    --violet:#7c3aed;
+    --violet-soft:#f2ecfd;
+
+    --avatar-1:#4f46e5; --avatar-2:#0d9488; --avatar-3:#c2760a;
+    --avatar-4:#d1372f; --avatar-5:#7c3aed; --avatar-6:#0f766e;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--indigo);color:#fff;}
+
+  .top-band{height:6px;background:linear-gradient(90deg,var(--indigo),var(--teal) 50%,var(--amber));}
+
+  .shell{max-width:1180px;margin:0 auto;padding:28px 20px 64px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    flex-wrap:wrap;gap:18px;
+    padding-bottom:22px;margin-bottom:26px;
+    border-bottom:1px solid var(--border);
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--indigo);margin-bottom:8px;font-weight:600;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;font-size:clamp(26px,3.4vw,38px);
+    margin:0;letter-spacing:-0.01em;color:var(--ink);
+  }
+  .clock{
+    font-family:'IBM Plex Mono',monospace;
+    text-align:right;color:var(--slate-400);font-size:13px;
+  }
+  .clock .day{color:var(--ink);font-size:15px;font-weight:600;text-transform:capitalize;}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px;}
+  .stat{
+    flex:1;min-width:130px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:14px 16px;
+    display:flex;flex-direction:column;gap:6px;
+    box-shadow:0 1px 2px rgba(20,25,50,.04);
+  }
+  .stat .num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1;}
+  .stat .lbl{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--slate-400);}
+  .stat.vencidos .num{color:var(--red);}
+  .stat.hoy .num{color:var(--amber);}
+  .stat.activos .num{color:var(--indigo);}
+  .stat.completados .num{color:var(--green);}
+
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    box-shadow:0 1px 3px rgba(20,25,50,.05);
+  }
+  .panel-title{
+    font-family:'Fraunces',serif;font-weight:600;font-size:18px;
+    margin:0 0 4px;color:var(--ink);
+  }
+  .panel-sub{font-size:12.5px;color:var(--slate-400);margin:0 0 18px;line-height:1.5;}
+
+  label{
+    display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--slate-400);margin-bottom:6px;margin-top:16px;font-weight:600;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=date], input[type=text], select, textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border-strong);
+    color:var(--ink);border-radius:9px;padding:10px 12px;
+    font-family:'Inter',sans-serif;font-size:14px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type=date]{font-family:'IBM Plex Mono',monospace;}
+  input::placeholder, textarea::placeholder{color:var(--slate-500);}
+  input:focus, select:focus, textarea:focus{
+    outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px var(--indigo-soft);
+  }
+  textarea{resize:vertical;min-height:74px;line-height:1.4;}
+
+  .two-col{display:flex;gap:10px;}
+  .two-col > div{flex:1;min-width:0;}
+
+  .area-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .chip{
+    font-size:11.5px;padding:5px 10px;border-radius:20px;
+    border:1px solid var(--border-strong);color:var(--ink-soft);
+    cursor:pointer;background:#fff;font-family:'Inter',sans-serif;
+  }
+  .chip.active, .chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft);}
+
+  .btn-primary{
+    margin-top:20px;width:100%;
+    background:var(--indigo);color:#fff;
+    border:none;border-radius:9px;padding:12px 16px;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14px;
+    cursor:pointer;transition:filter .15s ease;
+    letter-spacing:.01em;
+    box-shadow:0 2px 8px rgba(79,70,229,.28);
+  }
+  .btn-primary:hover{filter:brightness(1.06);}
+  .btn-primary:active{filter:brightness(0.95);}
+
+  .form-note{font-size:11.5px;color:var(--slate-500);margin-top:10px;line-height:1.5;}
+
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+  .tab{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    padding:8px 14px;border-radius:9px;border:1px solid var(--border);
+    background:var(--card);color:var(--slate-400);cursor:pointer;font-weight:500;
+  }
+  .tab.active{background:var(--indigo-soft);border-color:var(--indigo);color:var(--indigo-ink);}
+
+  .area-select-wrap{display:flex;align-items:center;gap:8px;margin-left:auto;}
+  .area-select-wrap select{width:auto;padding:8px 10px;font-size:12px;background:#fff;}
+
+  .rail{position:relative;padding-left:26px;}
+  .rail::before{
+    content:'';position:absolute;left:9px;top:6px;bottom:6px;width:1px;
+    background:linear-gradient(to bottom, var(--border-strong), transparent);
+  }
+  .task{
+    position:relative;margin-bottom:14px;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:16px 18px;
+    box-shadow:0 1px 2px rgba(20,25,50,.04);
+  }
+  .task::before{
+    content:'';position:absolute;left:-26px;top:22px;
+    width:11px;height:11px;border-radius:50%;
+    background:#fff;border:2px solid var(--slate-500);
+  }
+  .task.estado-vencido::before{background:var(--red);border-color:var(--red);box-shadow:0 0 0 4px var(--red-soft);}
+  .task.estado-hoy::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 4px var(--amber-soft);}
+  .task.estado-completado::before{background:var(--green);border-color:var(--green);}
+  .task.estado-activo::before{background:#fff;border-color:var(--slate-400);}
+  .task.estado-completado{opacity:.72;background:var(--bg-band);}
+
+  .task-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+  .task-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .date-chip{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+    color:var(--ink);background:var(--bg);border:1px solid var(--border-strong);
+    border-radius:7px;padding:4px 9px;white-space:nowrap;
+  }
+  .area-tag{
+    font-size:11px;letter-spacing:.04em;text-transform:uppercase;font-weight:600;
+    color:var(--teal);background:var(--teal-soft);border:1px solid transparent;
+    border-radius:20px;padding:4px 10px;
+  }
+  .resp-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);}
+  .avatar{
+    width:20px;height:20px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;flex:none;
+  }
+  .badge{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;
+    text-transform:uppercase;padding:3px 8px;border-radius:6px;font-weight:700;
+  }
+  .badge.vencido{background:var(--red-soft);color:var(--red);}
+  .badge.hoy{background:var(--amber-soft);color:var(--amber);}
+  .badge.completado{background:var(--green-soft);color:var(--green);}
+  .badge.reprogramado{background:var(--violet-soft);color:var(--violet);}
+
+  .task-text{margin:12px 0 0;font-size:14.5px;line-height:1.5;color:var(--ink-soft);}
+  .task.estado-completado .task-text{text-decoration:line-through;text-decoration-color:var(--slate-500);}
+
+  .solucion-box{
+    margin-top:10px;padding:10px 12px;background:var(--green-soft);border-radius:9px;
+    font-size:12.5px;color:#0f5c2c;line-height:1.5;
+  }
+  .solucion-box b{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:3px;}
+
+  .task-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .action-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+    border-radius:8px;padding:7px 12px;cursor:pointer;border:1px solid var(--border-strong);
+    background:#fff;color:var(--ink-soft);transition:all .15s ease;
+  }
+  .action-btn:hover{border-color:var(--indigo);color:var(--indigo);}
+  .action-btn.done{border-color:var(--green);color:var(--green);}
+  .action-btn.done:hover{background:var(--green-soft);}
+  .action-btn.postpone{border-color:var(--amber);color:var(--amber);}
+  .action-btn.postpone:hover{background:var(--amber-soft);}
+  .action-btn.undo{border-color:var(--slate-500);}
+  .action-btn.delete{color:var(--red);}
+  .action-btn.delete:hover{background:var(--red-soft);border-color:var(--red);}
+
+  .history{margin-top:10px;font-size:11px;color:var(--slate-500);font-family:'IBM Plex Mono',monospace;}
+
+  .edit-box{
+    margin-top:14px;padding:14px;border-radius:11px;
+    background:var(--bg);border:1px dashed var(--border-strong);
+  }
+  .edit-box .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .edit-box .row > div{flex:1;min-width:160px;}
+  .edit-actions{display:flex;gap:8px;margin-top:12px;}
+  .save-btn{background:var(--amber);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:600;font-size:12.5px;cursor:pointer;}
+  .cancel-btn{background:transparent;color:var(--slate-400);border:1px solid var(--border-strong);border-radius:8px;padding:8px 14px;font-size:12.5px;cursor:pointer;}
+
+  .empty{
+    text-align:center;padding:60px 20px;color:var(--slate-500);
+    border:1px dashed var(--border-strong);border-radius:14px;background:var(--card);
+  }
+  .empty .big{font-family:'Fraunces',serif;font-size:18px;color:var(--ink-soft);margin-bottom:6px;}
+
+  #toast-wrap{position:fixed;top:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:10px;max-width:320px;}
+  .toast{
+    background:#fff;border:1px solid var(--border);border-left:4px solid var(--indigo);border-radius:11px;
+    padding:14px 16px;box-shadow:0 10px 28px rgba(30,35,70,.14);
+    animation:slidein .25s ease;
+  }
+  .toast .t-title{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;color:var(--indigo);text-transform:uppercase;margin-bottom:4px;font-weight:700;}
+  .toast .t-body{font-size:13px;color:var(--ink);line-height:1.4;}
+  @keyframes slidein{from{transform:translateX(20px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+
+  .notif-banner{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--indigo-soft);border:1px solid #d9d5fb;border-radius:12px;
+    padding:10px 14px;margin-bottom:18px;font-size:12.5px;color:var(--indigo-ink);
+  }
+  .notif-banner button{
+    background:var(--indigo);border:none;color:#fff;flex:none;
+    border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(27,32,51,.45);
+    display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-box{
+    background:#fff;border-radius:16px;max-width:440px;width:100%;
+    padding:26px;box-shadow:0 24px 60px rgba(20,25,50,.25);
+  }
+  .modal-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);font-weight:700;margin-bottom:6px;}
+  .modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin:0 0 6px;color:var(--ink);}
+  .modal-sub{font-size:13px;color:var(--slate-400);margin:0 0 16px;line-height:1.5;}
+  .modal-box textarea{min-height:90px;}
+  .modal-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;}
+  .modal-btn-primary{
+    background:var(--green);color:#fff;border:none;border-radius:9px;padding:12px 16px;
+    font-weight:600;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .modal-btn-secondary{
+    background:#fff;color:var(--ink-soft);border:1px solid var(--border-strong);border-radius:9px;
+    padding:11px 16px;font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .modal-btn-cancel{
+    background:transparent;color:var(--slate-400);border:none;padding:8px;font-size:12.5px;
+    cursor:pointer;font-family:'Inter',sans-serif;text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="top-band"></div>
+<div id="toast-wrap"></div>
+
+<!-- COMPLETION MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-eyebrow">Marcar como realizado</div>
+    <p class="modal-title">¿Cómo se le dio solución?</p>
+    <p class="modal-sub">Es opcional. Puedes describirlo brevemente o simplemente omitir este paso.</p>
+    <textarea id="modal-solucion" placeholder="Ej. Se coordinó con el proveedor y se cerró el contrato…"></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn-primary" id="modal-guardar">Guardar y marcar como realizado</button>
+      <button class="modal-btn-secondary" id="modal-omitir">Omitir y marcar como realizado</button>
+      <button class="modal-btn-cancel" id="modal-cancelar">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Agenda gerencial · control de pendientes</div>
+      <h1>Panel de Pendientes</h1>
+    </div>
+    <div class="clock">
+      <div class="day" id="clock-day">—</div>
+      <div id="clock-time">—</div>
+    </div>
+  </header>
+
+  <div id="notif-banner-slot"></div>
+
+  <div class="stats">
+    <div class="stat activos"><div class="num" id="st-activos">0</div><div class="lbl">Activos</div></div>
+    <div class="stat hoy"><div class="num" id="st-hoy">0</div><div class="lbl">Vencen hoy</div></div>
+    <div class="stat vencidos"><div class="num" id="st-vencidos">0</div><div class="lbl">Vencidos</div></div>
+    <div class="stat completados"><div class="num" id="st-completados">0</div><div class="lbl">Completados</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- FORM -->
+    <div class="panel">
+      <p class="panel-title">Registrar nuevo pendiente</p>
+      <p class="panel-sub">Cárgalo a la agenda. Se ordenará automáticamente por fecha y se avisará cuando venza.</p>
+
+      <label for="f-fecha">Fecha límite</label>
+      <input type="date" id="f-fecha">
+
+      <div class="two-col">
+        <div>
+          <label for="f-area">Área</label>
+          <input type="text" id="f-area" placeholder="Ej. Operaciones" list="area-list">
+          <datalist id="area-list"></datalist>
+        </div>
+        <div>
+          <label for="f-resp">Jefe / Responsable</label>
+          <input type="text" id="f-resp" placeholder="Ej. María Torres" list="resp-list">
+          <datalist id="resp-list"></datalist>
+        </div>
+      </div>
+      <div class="area-chips" id="area-chips"></div>
+
+      <label for="f-texto">Pendiente</label>
+      <textarea id="f-texto" placeholder="Describe la tarea a realizar…"></textarea>
+
+      <button class="btn-primary" id="btn-registrar">Registrar pendiente</button>
+      <p class="form-note" id="notif-status">Verificando permisos de notificación…</p>
+    </div>
+
+    <!-- LIST -->
+    <div>
+      <div class="tabs">
+        <button class="tab active" data-filter="todos">Todos</button>
+        <button class="tab" data-filter="activos">Activos</button>
+        <button class="tab" data-filter="vencidos">Vencidos</button>
+        <button class="tab" data-filter="hoy">Hoy</button>
+        <button class="tab" data-filter="completados">Completados</button>
+        <div class="area-select-wrap">
+          <select id="area-filter"><option value="">Todas las áreas</option></select>
+        </div>
+      </div>
+
+      <div class="rail" id="task-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ⚠️ PEGA AQUÍ LA URL DE TU APLICACIÓN WEB DE APPS SCRIPT (paso 6 del Code.gs)
+  const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbykmY-eoKFFo9rEONj8oRHOLObeaChyHrZ9evfuGy88Hw9Rfd6PiVwSnn11uLV29JAz/exec";
+
+  const AREAS_SUGERIDAS = ["Dirección","Ventas","Operaciones","Finanzas","RRHH","Logística","Marketing"];
+  const AVATAR_COLORS = ["var(--avatar-1)","var(--avatar-2)","var(--avatar-3)","var(--avatar-4)","var(--avatar-5)","var(--avatar-6)"];
+  const REFRESH_MS = 20000; // cada cuánto se sincroniza con la hoja para ver cambios de otros usuarios
+
+  let tasks = [];
+  let notified = {}; // solo en memoria de esta sesión, no se guarda en la hoja
+  let currentFilter = "todos";
+  let currentArea = "";
+  let editingId = null;
+  let completingId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+
+  function fmtDate(dateStr){
+    const [y,m,d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    const weekday = dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','');
+    const day = String(d).padStart(2,'0');
+    const month = dt.toLocaleDateString('es-ES',{month:'short'}).replace('.','');
+    return {top:`${day} ${month}`, sub: weekday};
+  }
+
+  function estadoDe(t){
+    if(t.estado === 'completado') return 'completado';
+    if(t.fecha < todayStr()) return 'vencido';
+    if(t.fecha === todayStr()) return 'hoy';
+    return 'activo';
+  }
+
+  function uid(){ return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+  function avatarColor(name){
+    let h = 0;
+    for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  }
+  function initials(name){
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if(parts.length===0) return '?';
+    if(parts.length===1) return parts[0][0].toUpperCase();
+    return (parts[0][0]+parts[1][0]).toUpperCase();
+  }
+
+  // ---------- STORAGE (Google Sheets vía Apps Script) ----------
+  let isSyncing = false;
+
+  async function loadTasks(silent){
+    if(WEBAPP_URL.indexOf('PON_AQUI') === 0){
+      if(!silent) toast('Falta configurar', 'Pega la URL de tu Apps Script en la constante WEBAPP_URL del código.');
+      return;
+    }
+    try{
+      const res = await fetch(WEBAPP_URL, {method:'GET'});
+      const data = await res.json();
+      if(data.ok){ tasks = data.tasks || []; }
+      else if(!silent){ toast('Error al leer la hoja', data.error || 'Respuesta inválida.'); }
+    }catch(e){
+      if(!silent) toast('No se pudo conectar', 'Revisa la URL de Apps Script y que el despliegue sea público.');
+    }
+  }
+
+  // Sobreescribe toda la hoja con el estado actual de "tasks".
+  // Se llama después de cada acción (registrar, completar, aplazar, eliminar).
+  async function saveTasks(){
+    if(WEBAPP_URL.indexOf('PON_AQUI') === 0){
+      toast('Falta configurar', 'Pega la URL de tu Apps Script en la constante WEBAPP_URL del código.');
+      return;
+    }
+    isSyncing = true;
+    try{
+      const res = await fetch(WEBAPP_URL, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, // evita el preflight CORS
+        body: JSON.stringify({action:'sync', tasks})
+      });
+      const data = await res.json();
+      if(data.ok && data.tasks){ tasks = data.tasks; }
+      else if(!data.ok){ toast('Error al guardar', data.error || 'La hoja no confirmó el guardado.'); }
+    }catch(e){
+      toast('No se pudo guardar', 'Revisa tu conexión o la configuración de Apps Script.');
+    }finally{
+      isSyncing = false;
+    }
+  }
+
+  // Refresco periódico para ver cambios hechos por otras personas con el mismo link
+  function startAutoRefresh(){
+    setInterval(async ()=>{
+      if(isSyncing || editingId || completingId) return; // no interrumpir si alguien está editando
+      await loadTasks(true);
+      refreshFilterOptions();
+      render();
+      checkDueNotifications();
+    }, REFRESH_MS);
+  }
+
+  function tickClock(){
+    const d = new Date();
+    $('clock-day').textContent = d.toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'long'});
+    $('clock-time').textContent = d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  function renderAreaChips(){
+    const wrap = $('area-chips');
+    wrap.innerHTML = '';
+    AREAS_SUGERIDAS.forEach(a=>{
+      const b = document.createElement('button');
+      b.type='button'; b.className='chip'; b.textContent = a;
+      b.onclick = ()=>{ $('f-area').value = a; };
+      wrap.appendChild(b);
+    });
+    const dl = $('area-list');
+    dl.innerHTML = AREAS_SUGERIDAS.map(a=>`<option value="${a}">`).join('');
+  }
+
+  function refreshFilterOptions(){
+    const sel = $('area-filter');
+    const current = sel.value;
+    const areas = Array.from(new Set(tasks.map(t=>t.area).filter(Boolean))).sort();
+    sel.innerHTML = '<option value="">Todas las áreas</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+    sel.value = areas.includes(current) ? current : '';
+
+    const resps = Array.from(new Set(tasks.map(t=>t.responsable).filter(Boolean))).sort();
+    $('resp-list').innerHTML = resps.map(r=>`<option value="${r}">`).join('');
+  }
+
+  function toast(title, body){
+    const wrap = $('toast-wrap');
+    const el = document.createElement('div');
+    el.className='toast';
+    el.innerHTML = `<div class="t-title">${title}</div><div class="t-body">${body}</div>`;
+    wrap.appendChild(el);
+    setTimeout(()=>{ el.style.transition='opacity .3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 5000);
+  }
+
+  async function setupNotifications(){
+    const statusEl = $('notif-status');
+    if(!('Notification' in window)){
+      statusEl.textContent = 'Este navegador no admite notificaciones del sistema. Los avisos se mostrarán aquí en pantalla mientras la agenda esté abierta.';
+      renderNotifBanner(false); return;
+    }
+    if(Notification.permission === 'granted'){
+      statusEl.textContent = 'Notificaciones activas mientras esta pestaña esté abierta.';
+      renderNotifBanner(false);
+    } else if (Notification.permission === 'denied'){
+      statusEl.textContent = 'Notificaciones bloqueadas. Los avisos se mostrarán igual en pantalla.';
+      renderNotifBanner(false);
+    } else {
+      statusEl.textContent = 'Activa las notificaciones para recibir avisos cuando llegue la fecha.';
+      renderNotifBanner(true);
+    }
+  }
+
+  function renderNotifBanner(showButton){
+    const slot = $('notif-banner-slot');
+    if(!showButton){ slot.innerHTML=''; return; }
+    slot.innerHTML = `<div class="notif-banner">
+      <span>Los avisos funcionan mientras esta pestaña esté abierta en tu navegador — no llegan como notificación push con la app cerrada. Actívalos para verlos apenas venza un pendiente.</span>
+      <button id="btn-activar-notif">Activar avisos</button>
+    </div>`;
+    $('btn-activar-notif').onclick = async ()=>{ try{ await Notification.requestPermission(); setupNotifications(); }catch(e){} };
+  }
+
+  function checkDueNotifications(){
+    const today = todayStr();
+    tasks.forEach(t=>{
+      if(t.estado === 'completado') return;
+      if(t.fecha === today && notified[t.id] !== today){
+        notified[t.id] = today;
+        fireNotification(t);
+      }
+    });
+  }
+
+  function fireNotification(t){
+    toast('Pendiente vence hoy', `[${t.area || 'General'}] ${t.texto}`);
+    if('Notification' in window && Notification.permission === 'granted'){
+      try{ new Notification('Pendiente gerencial — vence hoy', { body: `${t.area ? '['+t.area+'] ' : ''}${t.texto}` }); }catch(e){}
+    }
+  }
+
+  // ---------- CRUD ----------
+  async function registrar(){
+    const fecha = $('f-fecha').value;
+    const area = $('f-area').value.trim();
+    const responsable = $('f-resp').value.trim();
+    const texto = $('f-texto').value.trim();
+    if(!fecha || !texto){
+      toast('Faltan datos', 'Ingresa al menos la fecha y la descripción del pendiente.');
+      return;
+    }
+    tasks.push({
+      id: uid(), fecha, area, responsable, texto,
+      estado: 'pendiente', solucion: '', aplazamientos: [], createdAt: Date.now()
+    });
+    $('f-fecha').value=''; $('f-area').value=''; $('f-resp').value=''; $('f-texto').value='';
+    await saveTasks();
+    refreshFilterOptions();
+    render();
+    toast('Pendiente registrado', texto);
+  }
+
+  function abrirModalCompletar(id){
+    completingId = id;
+    $('modal-solucion').value = '';
+    $('modal-overlay').classList.add('open');
+    setTimeout(()=>$('modal-solucion').focus(), 50);
+  }
+  function cerrarModal(){ completingId = null; $('modal-overlay').classList.remove('open'); }
+
+  async function confirmarCompletar(conSolucion){
+    if(!completingId) return;
+    const t = tasks.find(x=>x.id===completingId);
+    if(!t){ cerrarModal(); return; }
+    t.estado = 'completado';
+    t.completedAt = Date.now();
+    t.solucion = conSolucion ? $('modal-solucion').value.trim() : '';
+    cerrarModal();
+    await saveTasks();
+    render();
+    toast('Pendiente realizado', t.texto);
+  }
+
+  async function reabrir(id){
+    const t = tasks.find(x=>x.id===id);
+    if(!t) return;
+    t.estado = 'pendiente'; delete t.completedAt;
+    await saveTasks();
+    render();
+  }
+
+  async function eliminar(id){
+    tasks = tasks.filter(x=>x.id!==id);
+    await saveTasks();
+    refreshFilterOptions();
+    render();
+  }
+
+  async function guardarAplazamiento(id){
+    const t = tasks.find(x=>x.id===id);
+    if(!t) return;
+    const nuevaFecha = $('edit-fecha-'+id).value;
+    const nuevoTexto = $('edit-texto-'+id).value.trim();
+    const nuevaArea = $('edit-area-'+id).value.trim();
+    const nuevoResp = $('edit-resp-'+id).value.trim();
+    if(!nuevaFecha || !nuevoTexto){
+      toast('Faltan datos','Verifica la fecha y la descripción.');
+      return;
+    }
+    if(nuevaFecha !== t.fecha){
+      t.aplazamientos.push({de: t.fecha, a: nuevaFecha, fecha: Date.now()});
+    }
+    t.fecha = nuevaFecha; t.texto = nuevoTexto; t.area = nuevaArea; t.responsable = nuevoResp;
+    editingId = null;
+    await saveTasks();
+    refreshFilterOptions();
+    render();
+    toast('Pendiente reprogramado', `Nueva fecha: ${nuevaFecha}`);
+  }
+
+  // ---------- RENDER ----------
+  function computeStats(){
+    let activos=0, hoy=0, vencidos=0, completados=0;
+    tasks.forEach(t=>{
+      const e = estadoDe(t);
+      if(e==='completado') completados++;
+      else if(e==='vencido') vencidos++;
+      else if(e==='hoy') hoy++;
+      else activos++;
+    });
+    $('st-activos').textContent = activos+hoy+vencidos;
+    $('st-hoy').textContent = hoy;
+    $('st-vencidos').textContent = vencidos;
+    $('st-completados').textContent = completados;
+  }
+
+  function filteredTasks(){
+    return tasks.filter(t=>{
+      const e = estadoDe(t);
+      if(currentArea && t.area !== currentArea) return false;
+      if(currentFilter==='todos') return true;
+      if(currentFilter==='activos') return e==='activo' || e==='hoy';
+      if(currentFilter==='vencidos') return e==='vencido';
+      if(currentFilter==='hoy') return e==='hoy';
+      if(currentFilter==='completados') return e==='completado';
+      return true;
+    }).sort((a,b)=>{
+      if(a.estado==='completado' && b.estado!=='completado') return 1;
+      if(b.estado==='completado' && a.estado!=='completado') return -1;
+      return a.fecha.localeCompare(b.fecha);
+    });
+  }
+
+  function render(){
+    computeStats();
+    const list = $('task-list');
+    const items = filteredTasks();
+    if(items.length===0){
+      list.innerHTML = `<div class="empty"><div class="big">Sin pendientes aquí</div>Registra uno nuevo o cambia de filtro.</div>`;
+      return;
+    }
+    list.innerHTML = items.map(t=>renderTask(t)).join('');
+
+    items.forEach(t=>{
+      const done = document.getElementById('act-done-'+t.id);
+      if(done) done.onclick = ()=>abrirModalCompletar(t.id);
+      const undo = document.getElementById('act-undo-'+t.id);
+      if(undo) undo.onclick = ()=>reabrir(t.id);
+      const del = document.getElementById('act-del-'+t.id);
+      if(del) del.onclick = ()=>{ if(confirm('¿Eliminar este pendiente definitivamente?')) eliminar(t.id); };
+      const postpone = document.getElementById('act-postpone-'+t.id);
+      if(postpone) postpone.onclick = ()=>{ editingId = (editingId===t.id) ? null : t.id; render(); };
+      const save = document.getElementById('save-'+t.id);
+      if(save) save.onclick = ()=>guardarAplazamiento(t.id);
+      const cancel = document.getElementById('cancel-'+t.id);
+      if(cancel) cancel.onclick = ()=>{ editingId=null; render(); };
+    });
+  }
+
+  function renderTask(t){
+    const e = estadoDe(t);
+    const d = fmtDate(t.fecha);
+    let badge = '';
+    if(e==='vencido') badge = '<span class="badge vencido">Vencido</span>';
+    else if(e==='hoy') badge = '<span class="badge hoy">Hoy</span>';
+    else if(e==='completado') badge = '<span class="badge completado">Realizado</span>';
+    const repBadge = t.aplazamientos.length>0 ? `<span class="badge reprogramado">Reprogramado ×${t.aplazamientos.length}</span>` : '';
+
+    let actions = '';
+    if(e==='completado'){
+      actions = `<button class="action-btn undo" id="act-undo-${t.id}">↺ Reabrir</button>
+                 <button class="action-btn delete" id="act-del-${t.id}">Eliminar</button>`;
+    } else {
+      actions = `<button class="action-btn done" id="act-done-${t.id}">✓ Realizado</button>
+                 <button class="action-btn postpone" id="act-postpone-${t.id}">⏳ Aplazar</button>
+                 <button class="action-btn delete" id="act-del-${t.id}">Eliminar</button>`;
+    }
+
+    let history = '';
+    if(t.aplazamientos.length>0){
+      const last = t.aplazamientos[t.aplazamientos.length-1];
+      history = `<div class="history">Última reprogramación: ${last.de} → ${last.a}</div>`;
+    }
+
+    let solucionBox = '';
+    if(e==='completado' && t.solucion){
+      solucionBox = `<div class="solucion-box"><b>Solución</b>${escapeHtml(t.solucion)}</div>`;
+    }
+
+    const respChip = t.responsable ? `<span class="resp-chip"><span class="avatar" style="background:${avatarColor(t.responsable)}">${initials(t.responsable)}</span>${escapeHtml(t.responsable)}</span>` : '';
+
+    let editBox = '';
+    if(editingId === t.id){
+      editBox = `<div class="edit-box">
+        <div class="row">
+          <div>
+            <label for="edit-fecha-${t.id}">Nueva fecha</label>
+            <input type="date" id="edit-fecha-${t.id}" value="${t.fecha}">
+          </div>
+          <div>
+            <label for="edit-area-${t.id}">Área</label>
+            <input type="text" id="edit-area-${t.id}" value="${escapeAttr(t.area)}">
+          </div>
+          <div>
+            <label for="edit-resp-${t.id}">Jefe / Responsable</label>
+            <input type="text" id="edit-resp-${t.id}" value="${escapeAttr(t.responsable)}">
+          </div>
+        </div>
+        <label for="edit-texto-${t.id}">Pendiente</label>
+        <textarea id="edit-texto-${t.id}">${escapeHtml(t.texto)}</textarea>
+        <div class="edit-actions">
+          <button class="save-btn" id="save-${t.id}">Guardar y reprogramar</button>
+          <button class="cancel-btn" id="cancel-${t.id}">Cancelar</button>
+        </div>
+      </div>`;
+    }
+
+    return `<div class="task estado-${e}">
+      <div class="task-top">
+        <div class="task-meta">
+          <span class="date-chip">${d.top}<span style="color:var(--slate-400);font-weight:400;"> · ${d.sub}</span></span>
+          ${t.area ? `<span class="area-tag">${escapeHtml(t.area)}</span>` : ''}
+          ${respChip}
+          ${badge}
+          ${repBadge}
+        </div>
+      </div>
+      <p class="task-text">${escapeHtml(t.texto)}</p>
+      ${solucionBox}
+      ${history}
+      <div class="task-actions">${actions}</div>
+      ${editBox}
+    </div>`;
+  }
+
+  function escapeHtml(s){
+    return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- INIT ----------
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.onclick = ()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      render();
+    };
+  });
+  $('area-filter').addEventListener('change', (e)=>{ currentArea = e.target.value; render(); });
+  $('btn-registrar').onclick = registrar;
+  $('modal-guardar').onclick = ()=>confirmarCompletar(true);
+  $('modal-omitir').onclick = ()=>confirmarCompletar(false);
+  $('modal-cancelar').onclick = cerrarModal;
+  $('modal-overlay').addEventListener('click', (e)=>{ if(e.target.id==='modal-overlay') cerrarModal(); });
+
+  async function init(){
+    renderAreaChips();
+    tickClock();
+    setInterval(tickClock, 30000);
+    await loadTasks();
+    refreshFilterOptions();
+    render();
+    await setupNotifications();
+    checkDueNotifications();
+    setInterval(checkDueNotifications, 60000);
+    startAutoRefresh();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
